@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from .serializers import UserSerializer
 
 # Create your views here.
 
@@ -10,10 +11,11 @@ User = get_user_model()
 
 class RegisterView(APIView):
     permission_classes = (permissions.AllowAny,)
+
     def post(self, request):
         try:
             data = request.data
-            name = data['name']
+            name = data['username']
             email = data['email']
             email = email.lower()
             password = data['password']
@@ -28,10 +30,11 @@ class RegisterView(APIView):
                 if len(password) >= 8:
                     if not User.objects.filter(email=email).exists():
                         if not is_realtor:
-                            User.objects.create_user(name=name, email=email, password=password)
+                            User.objects.create_user(username=name, email=email, password=password)
                             return Response({'success': 'User created successfully'}, status=status.HTTP_201_CREATED)
                         else:
-                            User.objects.create_realtor(name=name, email=email, password=password)
+                            print('dsdsa')
+                            User.objects.create_realtor(username=name, email=email, password=password)
                             return Response({'success': 'Realtor account created successfully'},
                                             status=status.HTTP_201_CREATED)
 
@@ -56,5 +59,21 @@ class RegisterView(APIView):
         except:
             return Response(
                 {'error': 'Something went wrong when registering an account'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class RetrieveUserView(APIView):
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            user = UserSerializer(user)
+            return Response(
+                {'user': user.data},
+                status=status.HTTP_200_OK
+            )
+        except:
+            return Response(
+                {'error': 'Something went wrong when retrieving user details'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
