@@ -5,24 +5,24 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin, BaseUserM
 # Create your models here.
 
 class UserAccountManager(BaseUserManager):
-    def create_user(self, name, email, password=None):
+    def create_user(self, username, email, password=None):
         if not email:
             raise ValueError('User must have an email address')
         email = self.normalize_email(email)
         email = email.lower()
-        user = self.model(email=email, name=name)
+        user = self.model(email=email, username=username)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_realtor(self, email, name, password=None):
-        user = self.create_user(email, name, password)
+    def create_realtor(self, email, username, password=None):
+        user = self.create_user(email, username, password)
         user.is_realtor = True
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, name, password=None):
-        user = self.create_user(email, name, password)
+    def create_superuser(self, email, username, password=None):
+        user = self.create_user(email, username, password)
         user.is_superuser = True
         user.is_staff = True
         user.save(using=self._db)
@@ -31,7 +31,7 @@ class UserAccountManager(BaseUserManager):
 
 class UserAccount(AbstractUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
-    name = models.CharField(max_length=255)
+    username = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_realtor = models.BooleanField(default=False)
@@ -39,7 +39,7 @@ class UserAccount(AbstractUser, PermissionsMixin):
     objects = UserAccountManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
+    REQUIRED_FIELDS = ['username']
 
     def __str__(self):
         return self.email
